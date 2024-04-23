@@ -1,0 +1,68 @@
+# @format
+
+version: "3.8"
+services:
+  postgresql:
+    image: postgres:latest
+    container_name: postgres
+    restart: on-failure
+    ports:
+      - "5433:5432"
+    environment:
+      DATABASE_NAME: ${DATABASE_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: on-failure
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgresql
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    restart: on-failure
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: on-failure
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      AUTH: admin
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: on-failure
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongodb
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: masud
+      ME_CONFIG_MONGODB_ADMINPASSWORD: amcmsd396
+      ME_CONFIG_MONGODB_SERVER: mongodb
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  rabbitmq_data:
+  mongodb_data:

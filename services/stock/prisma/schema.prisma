@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ActionType {
+  IN
+  OUT
+}
+enum Source {
+  SATOTA_AGRO
+  LC
+  OTHER
+  SALES
+
+}
+
+model Stock {
+  id String @id @default(cuid())
+  productId String @unique
+  sku String @unique
+  productName String 
+  category String
+  currentStock Int
+  histories StockHistory[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockHistory {
+  id String @id @default(cuid())
+  actionType ActionType @default(IN)
+  quantity Int
+  lastStock Int? @default(0)
+  currentStock Int
+  source Source @default(SATOTA_AGRO)
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  stockId String
+  createdAt DateTime @default(now())
+}
+
