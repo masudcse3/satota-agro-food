@@ -30,3 +30,14 @@ export const receiveEventFromQueue = async (
     console.error("[Rabbit MQ receiver]:", error);
   }
 };
+export const generatePagination = ({ totalItems, page, limit }) => {
+  const totalPages = Math.ceil(totalItems / limit);
+  return {
+    totalItems,
+    totalPages,
+    currentPage: page,
+    nextPage: page < totalPages ? Number(page) + 1 : NaN,
+    prevPage: page > 1 && page <= totalPages ? page - 1 : NaN,
+    limit: Number(limit),
+  };
+};

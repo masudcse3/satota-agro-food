@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from "express";
 import axios from "axios";
 import { z } from "zod";
 import { productCreateSchema } from "@/schemas";
+import ShortUniqueId from "short-unique-id";
 const bulkProductCreate = async (
   req: Request,
   res: Response,
@@ -17,7 +18,7 @@ const bulkProductCreate = async (
         error: parseBody.error.errors,
       });
     }
-
+    const { randomUUID } = new ShortUniqueId({ length: 10 });
     const productData = parseBody.data.map((product) => {
       return {
         name: product.name,
@@ -28,9 +29,9 @@ const bulkProductCreate = async (
         category: product.category,
         currentStock: product.currentStock,
         source: product.source,
+        sku: product.sku || randomUUID(),
       };
     });
-    console.log("Product Data", productData);
 
     const product_service_url =
       process.env.PRODUCT_SERVICE_URL || "http://localhost:4000";
@@ -44,6 +45,7 @@ const bulkProductCreate = async (
         category: productData[i].category,
         currentStock: productData[i].currentStock,
         source: productData[i].source,
+        sku: productData[i].sku,
       });
     }
 

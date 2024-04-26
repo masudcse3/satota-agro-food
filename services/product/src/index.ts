@@ -21,7 +21,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
-app.get("/health", (_req: Request, res: Response) => {
+app.get("/products/health", (_req: Request, res: Response) => {
   res.status(200).json({ message: "OK" });
 });
 
@@ -32,7 +32,7 @@ app.delete("/products/:productId", deleteProduct);
 app.post("/products", createProduct);
 app.get("/products", getProducts);
 
-app.post("/bulkproducts", bulkProductCreate);
+app.post("/products/bulk", bulkProductCreate);
 // 404 Error Hnadler
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Not Found" });

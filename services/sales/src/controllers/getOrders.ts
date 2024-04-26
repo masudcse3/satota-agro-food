@@ -2,6 +2,7 @@
 
 import { Request, Response, NextFunction } from "express";
 import prisma from "@/prisma";
+import { generatePagination } from "@/utils";
 
 const getOrders = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -41,21 +42,12 @@ const getOrders = async (req: Request, res: Response, next: NextFunction) => {
         },
       },
     });
-    const totalPages = Math.ceil(totalOrders / limit);
-    const nextPage = page < totalPages ? Number(page) + 1 : NaN;
-    const prevPage = page > 1 && page <= totalPages ? page - 1 : NaN;
-    const response = {
-      data: orders,
-      pagination: {
-        totalOrders,
-        currentPage: Number(page),
-        totalPages,
-        nextPage,
-        prevPage,
-        limit: Number(limit),
-      },
-    };
-    res.status(200).json(response);
+    const pagination = generatePagination({
+      totalItems: totalOrders,
+      page,
+      limit,
+    });
+    res.status(200).json({ data: orders, pagination });
   } catch (error) {
     next(error);
   }

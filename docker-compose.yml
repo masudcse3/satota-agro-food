@@ -2,18 +2,20 @@
 
 version: "3.8"
 services:
-  postgresql:
+  db:
     image: postgres:latest
-    container_name: postgres
+    container_name: db-container
     restart: on-failure
     ports:
-      - "5433:5432"
+      - "5434:5432"
     environment:
-      DATABASE_NAME: ${DATABASE_NAME}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_NAME: "postgres"
+      POSTGRES_USER: "masud"
+      POSTGRES_PASSWORD: "masud"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - satota-agro-food
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
@@ -24,9 +26,11 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - postgresql
+      - db
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - satota-agro-food
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: rabbitmq
@@ -36,6 +40,8 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - satota-agro-food
   mongodb:
     image: mongo:latest
     container_name: mongodb
@@ -56,13 +62,170 @@ services:
       - "8081:8081"
     depends_on:
       - mongodb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: masud
       ME_CONFIG_MONGODB_ADMINPASSWORD: amcmsd396
       ME_CONFIG_MONGODB_SERVER: mongodb
+    networks:
+      - satota-agro-food
+  #API Gateway
+  kong-database:
+    image: postgres:9.6
+    container_name: kong-database
+    ports:
+      - 5436:5432
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=kong
+      - POSTGRES_DB=kong
+      - POSTGRES_PASSWORD=kong
+    volumes:
+      - db-data-kong-postgres:/var/lib/postgresql/data
+    networks:
+      - satota-agro-food
 
+  kong-migrations:
+    image: kong
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=kong-database
+      - KONG_PG_PASSWORD=kong
+      - KONG_CASSANDRA_CONTACT_POINTS=kong-database
+    command: kong migrations bootstrap
+    restart: on-failure
+    depends_on:
+      - kong-database
+    networks:
+      - satota-agro-food
+
+  kong:
+    image: kong
+    container_name: kong
+    environment:
+      - LC_CTYPE=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=kong-database
+      - KONG_PG_USER=kong
+      - KONG_PG_PASSWORD=kong
+      - KONG_CASSANDRA_CONTACT_POINTS=kong-database
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl
+    restart: on-failure
+    ports:
+      - 8000:8000
+      - 8443:8443
+      - 8001:8001
+      - 8444:8444
+    links:
+      - kong-database:kong-database
+    depends_on:
+      - kong-migrations
+    networks:
+      - satota-agro-food
+
+  konga:
+    image: pantsel/konga
+    ports:
+      - 1337:1337
+    links:
+      - kong:kong
+    container_name: konga
+    restart: on-failure
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - konga_data:/app
+
+    networks:
+      - satota-agro-food
+
+  #API services
+  #product service
+  product-service:
+    platform: linux/amd64
+    build:
+      context: ./services/product
+      dockerfile: ./Dockerfile
+    container_name: product-service
+
+    ports:
+      - 4000:4000
+    restart: on-failure
+    depends_on:
+      - db
+      - rabbitmq
+    volumes:
+      - ./services/product:/app
+    networks:
+      - satota-agro-food
+  stock-service:
+    platform: linux/amd64
+    build:
+      context: ./services/stock
+      dockerfile: ./Dockerfile
+    container_name: stock-service
+
+    ports:
+      - 3000:3000
+    restart: on-failure
+    depends_on:
+      - db
+      - rabbitmq
+    volumes:
+      - ./services/stock:/app
+    networks:
+      - satota-agro-food
+      # sales service
+  sales-service:
+    platform: linux/amd64
+    build:
+      context: ./services/sales
+      dockerfile: ./Dockerfile
+    container_name: sales-service
+
+    ports:
+      - 5500:5500
+    restart: on-failure
+    depends_on:
+      - db
+      - rabbitmq
+    volumes:
+      - ./services/sales:/app
+    networks:
+      - satota-agro-food
+  customer-service:
+    platform: linux/amd64
+    build:
+      context: ./services/customer
+      dockerfile: ./Dockerfile
+    container_name: customer-service
+
+    ports:
+      - 3300:3300
+    restart: on-failure
+    depends_on:
+      - mongodb
+    volumes:
+      - ./services/customer:/app
+    networks:
+      - satota-agro-food
+
+networks:
+  satota-agro-food:
+    driver: bridge
 volumes:
   postgres_data:
   pgadmin_data:
   rabbitmq_data:
   mongodb_data:
+  konga_data:
+  db-data-kong-postgres:
