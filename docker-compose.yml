@@ -42,6 +42,17 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - satota-agro-food
+  redis-stack:
+    image: redis/redis-stack:latest
+    container_name: redis-stack
+    restart: on-failure
+    ports:
+      - "6379:6379"
+      - "8002:8001"
+    volumes:
+      - redis_data:/var/lib/redis
+    networks:
+      - satota-agro-food
   mongodb:
     image: mongo:latest
     container_name: mongodb
@@ -213,3 +224,4 @@ volumes:
   mongodb_data:
   konga_data:
   db-data-kong-postgres:
+  redis_data:

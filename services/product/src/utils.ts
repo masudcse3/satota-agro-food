@@ -42,3 +42,19 @@ export const generatePagination = ({ totalItems, page, limit }) => {
     limit: Number(limit),
   };
 };
+
+// Redis caching
+import redis from "@/redis";
+export const setOrGetCache = async (key: string, cb: Function) => {
+  // get from the cache if it exists
+  const REDIS_EXPIRE_TIME = process.env.REDIS_EXPIRE_TIME || 3600;
+  key = key || "products";
+  const cachedData = await redis.get(key);
+  if (cachedData) {
+    return JSON.parse(cachedData);
+  }
+  // get from the database
+  const data = await cb();
+  redis.setex(key, REDIS_EXPIRE_TIME, JSON.stringify(data));
+  return data;
+};

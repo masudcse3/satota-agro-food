@@ -16,13 +16,13 @@
     "allowSyntheticDefaultImports": true,
     "typeRoots": ["./src/types", "./node_modules/@types"],
     "sourceMap": true,
-    "types": ["node", "express"],
+    "types": ["node", "express", "mocha"],
     "noImplicitAny": false,
     "baseUrl": "./src",
     "paths": {
       "@/*": ["*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
 }

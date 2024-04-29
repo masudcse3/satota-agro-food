@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "ts-node-dev -r tsconfig-paths/register ./src/index.ts",
+    "test": "mocha --require ts-node/register ./tests/**/*.ts",
     "build": "tsc && tsc-alias"
   },
   "dependencies": {
@@ -18,11 +19,20 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/chai": "^4.3.14",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/mocha": "^10.0.6",
     "@types/mongoose": "^5.11.97",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.12.7",
+    "@types/supertest": "^6.0.2",
+    "chai": "^5.1.0",
+    "mocha": "^10.4.0",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsc": "^2.0.4",
     "tsc-alias": "^1.8.8",
